@@ -9,9 +9,8 @@ import (
 )
 
 var (
-	backgroundColor = color.RGBA{R: 94, G: 2, B: 2, A: 1}
-	aliveColor      = color.RGBA{R: 206, G: 2, B: 2, A: 1}
-	boardSize       = 20
+	backgroundColor = color.RGBA{R: 94, G: 2, B: 2, A: 255}
+	aliveColor      = color.RGBA{R: 206, G: 2, B: 2, A: 255}
 )
 
 type LifeGame struct {
@@ -19,8 +18,12 @@ type LifeGame struct {
 	Board   *board
 }
 
-func invalidCord(cord int) bool {
-	return cord < 0 || cord >= boardSize
+func NewGame(board *board) *LifeGame {
+	return &LifeGame{Board: board}
+}
+
+func (g *LifeGame) invalidCords(x, y int) bool {
+	return x < 0 || y < 0 || x >= g.Board.width || y >= g.Board.height
 }
 
 func (g *LifeGame) changeMode() {
@@ -44,7 +47,7 @@ func (g *LifeGame) Update() error {
 
 func (g *LifeGame) updateCell(updateFunction func(int, int)) {
 	x, y := ebiten.CursorPosition()
-	if invalidCord(x) || invalidCord(y) {
+	if g.invalidCords(x, y) {
 		return
 	}
 	updateFunction(x, y)
@@ -59,10 +62,10 @@ func (g *LifeGame) countNeiboors(x, y int) int {
 				continue
 			}
 			nx, ny := x+dx, y+dy
-			if nx < 0 || nx >= g.Board.width || ny < 0 || ny >= g.Board.height {
+			if g.invalidCords(nx, ny) {
 				continue
 			}
-			if g.Board.cells[ny*g.Board.width+nx] {
+			if g.Board.GetCell(nx, ny) {
 				neighbors++
 			}
 		}
@@ -71,16 +74,17 @@ func (g *LifeGame) countNeiboors(x, y int) int {
 }
 
 func (g *LifeGame) updateBoard() {
-
-	next := make([]bool, len(g.Board.cells))
-
-	for i, alive := range g.Board.cells {
-		x, y := i%g.Board.width, i/g.Board.width
-		neighbors := g.countNeiboors(x, y)
-		next[i] = neighbors == 3 || (alive && neighbors == 2)
+	next, _ := NewBoard(g.Board.width, g.Board.height)
+	for x := range g.Board.width {
+		for y := range g.Board.height {
+			neighbors := g.countNeiboors(x, y)
+			if !(neighbors == 3 || (g.Board.GetCell(x, y) && neighbors == 2)) {
+				continue
+			}
+			next.SetCell(x, y)
+		}
 	}
-
-	g.Board.cells = next
+	g.Board = next
 }
 
 func (g *LifeGame) Draw(screen *ebiten.Image) {
@@ -93,5 +97,5 @@ func (g *LifeGame) Draw(screen *ebiten.Image) {
 }
 
 func (g *LifeGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return boardSize, boardSize
+	return g.Board.height, g.Board.width
 }

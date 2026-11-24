@@ -23,6 +23,10 @@ func (b *board) ChangeCell(x, y int) {
 	b.cells[y*b.width+x] = !b.cells[y*b.width+x]
 }
 
+func (b *board) GetCell(x, y int) bool {
+	return b.cells[y*b.width+x]
+}
+
 func (b *board) SetCell(x, y int) {
 	b.cells[y*b.width+x] = true
 }

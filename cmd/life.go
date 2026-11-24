@@ -7,13 +7,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+var deffoultBoardSize = 20
+
 func main() {
-	board, err := game.NewBoard(100, 100)
+
+	board, err := game.NewBoard(deffoultBoardSize, deffoultBoardSize)
 	if err != nil {
 		log.Printf("board initializing error: %s", err.Error())
 		return
 	}
-	game := &game.LifeGame{Board: board}
+	game := game.NewGame(board)
+	ebiten.SetTPS(30)
 	ebiten.SetWindowSize(800, 800)
 	ebiten.SetWindowTitle("Simple life game")
 
